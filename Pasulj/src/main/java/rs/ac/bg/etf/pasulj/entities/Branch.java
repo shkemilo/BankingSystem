@@ -15,40 +15,41 @@ import javax.persistence.Id;
  * @author matej
  */
 @Entity
-public class Location {
-    
+public class Branch {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     
-    private String name;
+    private String address;
     
-    private int postalNumber;
-    
-    public Location(String name, int postalNumber) {
-        this.name = name;
-        this.postalNumber = postalNumber;
+    private Location location;
+
+    public Branch(String address, Location location) {
+        this.address = address;
+        this.location = location;
     }
     
-    public Location() { }
+    public Branch() { }
 
     public Long getId() {
         return id;
     }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public Location getLocation() {
+        return location;
+    }
+
+    public void setLocation(Location location) {
+        this.location = location;
+    }
     
-     public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public int getPostalNumber() {
-        return postalNumber;
-    }
-
-    public void setPostalNumber(int postalNumber) {
-        this.postalNumber = postalNumber;
-    }
+    
 }

@@ -9,34 +9,37 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToOne;
 
 /**
  *
  * @author matej
  */
 @Entity
-public class Location {
-    
+public class Client {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     
     private String name;
     
-    private int postalNumber;
+    private String address;
     
-    public Location(String name, int postalNumber) {
+    private Location location;
+
+    public Client(String name, String address, Location location) {
         this.name = name;
-        this.postalNumber = postalNumber;
+        this.address = address;
+        this.location = location;
     }
     
-    public Location() { }
+    public Client() { }
 
     public Long getId() {
         return id;
     }
-    
-     public String getName() {
+
+    public String getName() {
         return name;
     }
 
@@ -44,11 +47,19 @@ public class Location {
         this.name = name;
     }
 
-    public int getPostalNumber() {
-        return postalNumber;
+    public String getAddress() {
+        return address;
     }
 
-    public void setPostalNumber(int postalNumber) {
-        this.postalNumber = postalNumber;
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public Location getLocation() {
+        return location;
+    }
+
+    public void setLocation(Location location) {
+        this.location = location;
     }
 }
