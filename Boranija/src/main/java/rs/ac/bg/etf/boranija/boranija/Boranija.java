@@ -23,7 +23,7 @@ public class Boranija {
         
         entityManager.getTransaction().begin();
         
-        Client client = new Client("Marko Markovic", "LOL 123");
+        Client client = new Client("Marko Markovic", "LOL 123", 0);
         entityManager.persist(client);
         
         entityManager.getTransaction().commit();

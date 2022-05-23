@@ -33,6 +33,8 @@ public class Client {
     
     private String name;
     
+    private long locationId;
+    
     private String address;
     
     @OneToMany(mappedBy = "owner",
@@ -41,9 +43,10 @@ public class Client {
                cascade = CascadeType.ALL)
     private List<Account> accounts = new ArrayList<>();
 
-    public Client(String name, String address) {
+    public Client(String name, String address, long locationId) {
         this.name = name;
         this.address = address;
+        this.locationId = locationId;
     }
     
     public Client() { }
@@ -58,6 +61,14 @@ public class Client {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public long getLocationId() {
+        return locationId;
+    }
+
+    public void setLocationId(long locationId) {
+        this.locationId = locationId;
     }
 
     public String getAddress() {
