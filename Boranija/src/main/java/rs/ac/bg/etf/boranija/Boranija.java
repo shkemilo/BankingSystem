@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package rs.ac.bg.etf.boranija.boranija;
+package rs.ac.bg.etf.boranija;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
