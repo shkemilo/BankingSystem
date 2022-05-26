@@ -5,9 +5,12 @@
  */
 package rs.ac.bg.etf.kupus.kupus;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import rs.ac.bg.etf.kupus.controllers.DataSyncController;
 import rs.ac.bg.etf.kupus.entities.Client;
 
 /**
@@ -24,7 +27,13 @@ public class Kupus {
         entityManager.getTransaction().begin();
         
         Client client = new Client("Marko Markovic", "LOL 123", null);
-        entityManager.persist(client);
+        List<Client> clients = new ArrayList<>();
+        for(int i = 0; i < 10; i++) {
+            clients.add(new Client("Mile" + i, "LOL 123", null));
+        }
+        
+        DataSyncController dsc = new DataSyncController();
+        dsc.sync(clients, Client.class);
         
         entityManager.getTransaction().commit();
         
