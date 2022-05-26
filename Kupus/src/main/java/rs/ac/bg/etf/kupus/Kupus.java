@@ -10,7 +10,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import rs.ac.bg.etf.kupus.controllers.DataSyncController;
+import rs.ac.bg.etf.commons.controllers.DataSyncController;
 import rs.ac.bg.etf.kupus.entities.Client;
 
 /**

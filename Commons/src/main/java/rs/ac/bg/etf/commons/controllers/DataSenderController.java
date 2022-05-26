@@ -3,29 +3,27 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package rs.ac.bg.etf.boranija.controllers;
+package rs.ac.bg.etf.commons.controllers;
 
 import java.util.List;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import rs.ac.bg.etf.boranija.utils.EntityUtility;
+import rs.ac.bg.etf.commons.utils.EntityUtility;
 
 /**
  *
  * @author matej
  */
 public class DataSenderController {
-    EntityManagerFactory emf;
     
-    public DataSenderController() {
-        emf = Persistence.createEntityManagerFactory("kupusPU");
+    private EntityManager entityManager;
+    
+    public DataSenderController(EntityManager entityManager) {
+        this.entityManager = entityManager;
     }
     
-    public <T> List<T> getAll(Class<T> entityClass) {   
-        EntityManager entityManager = emf.createEntityManager();
-        
+    public <T> List<T> getAll(Class<T> entityClass) {       
         if(!EntityUtility.isEntity(entityManager, entityClass)) {
             entityManager.close();
             return null;
@@ -37,10 +35,5 @@ public class DataSenderController {
         entityManager.close();
         
         return entities;
-    }
-    
-    @Override
-    protected void finalize() {
-        emf.close();
     }
 }

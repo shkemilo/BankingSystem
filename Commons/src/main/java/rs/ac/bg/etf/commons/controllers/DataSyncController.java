@@ -3,13 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package rs.ac.bg.etf.kupus.controllers;
+package rs.ac.bg.etf.commons.controllers;
 
 import java.util.List;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import rs.ac.bg.etf.kupus.utils.EntityUtility;
+import rs.ac.bg.etf.commons.utils.EntityUtility;
 
 /**
  *
@@ -17,10 +15,10 @@ import rs.ac.bg.etf.kupus.utils.EntityUtility;
  */
 public class DataSyncController {
     
-    EntityManagerFactory emf;
+    private EntityManager entityManager;
     
-    public DataSyncController() {
-        emf = Persistence.createEntityManagerFactory("kupusPU");
+    public DataSyncController(EntityManager entityManager) {
+        this.entityManager = entityManager;
     }
     
     public <T> void sync(List<T> entities, Class<T> entityClass) {
@@ -28,21 +26,11 @@ public class DataSyncController {
             return;
         }
         
-        EntityManager entityManager = emf.createEntityManager();
-        
         if(!EntityUtility.isEntity(entityManager, entityClass)) {
-            entityManager.close();
             return;
         }
         
         EntityUtility.clearTable(entityManager, entityClass);
         EntityUtility.addEntities(entityManager, entities);
-        
-        entityManager.close();
-    }
-    
-    @Override
-    protected void finalize() {
-        emf.close();
     }
 }
