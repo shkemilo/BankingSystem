@@ -32,7 +32,7 @@ public class Kupus {
             clients.add(new Client("Mile" + i, "LOL 123", null));
         }
         
-        DataSyncController dsc = new DataSyncController();
+        DataSyncController dsc = new DataSyncController(entityManager);
         dsc.sync(clients, Client.class);
         
         entityManager.getTransaction().commit();
