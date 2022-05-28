@@ -20,7 +20,7 @@ import javax.servlet.annotation.WebListener;
 @WebListener
 public class KupusInitializeServlet implements ServletContextListener {
     
-    private final Logger logger = Logger.getLogger(getClass().getName());
+    private static final Logger logger = Logger.getLogger(KupusInitializeServlet.class.getName());
     
     @Override
     public void contextInitialized(ServletContextEvent sce) {

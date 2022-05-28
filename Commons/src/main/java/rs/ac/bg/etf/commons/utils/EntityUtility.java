@@ -46,7 +46,6 @@ public class EntityUtility {
             entityManager.persist(entity);
         }
         
-
         entityManager.getTransaction().commit();
     }
 }

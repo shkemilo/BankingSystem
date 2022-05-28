@@ -13,13 +13,21 @@ import rs.ac.bg.etf.commons.utils.EntityUtility;
 
 /**
  *
- * @author matej
+ * @author matejs
  */
 public class DataSenderController {
     
     private EntityManager entityManager;
     
     public DataSenderController(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
+    
+    public EntityManager getEntityManager() {
+        return entityManager;
+    }
+    
+    public void setEntityManager(EntityManager entityManager) {
         this.entityManager = entityManager;
     }
     
