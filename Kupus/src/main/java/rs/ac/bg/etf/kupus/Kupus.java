@@ -5,14 +5,14 @@
  */
 package rs.ac.bg.etf.kupus;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import rs.ac.bg.etf.kupus.services.KupusDataSyncService;
 
 /**
  *
  * @author matej
  */
 public class Kupus {
-
+    public static void main(String[] args) {
+        System.out.println("rs.ac.bg.etf.kupus.Kupus.main()");
+    }
 }
