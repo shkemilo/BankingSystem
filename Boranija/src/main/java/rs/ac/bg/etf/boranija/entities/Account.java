@@ -55,7 +55,7 @@ public class Account {
                orphanRemoval = true,
                fetch = FetchType.LAZY,
                cascade = CascadeType.ALL)
-    private List<Transaction> transactions = new ArrayList<>();
+    private transient List<Transaction> transactions = new ArrayList<>();
 
     public Account(Client owner, long allowedMinus) {
         this.owner = owner;

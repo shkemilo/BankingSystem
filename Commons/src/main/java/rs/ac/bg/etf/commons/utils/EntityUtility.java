@@ -10,6 +10,7 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
+import javax.transaction.UserTransaction;
 
 /**
  *
@@ -30,22 +31,34 @@ public class EntityUtility {
         return foundEntity;
     }
     
-    public static <T> void clearTable(EntityManager entityManager, Class<T> entityClass) {
-        entityManager.getTransaction().begin();
-        
-        Query query = entityManager.createQuery("DELETE FROM " + entityClass.getSimpleName());
-        query.executeUpdate();
-        
-        entityManager.getTransaction().commit();
+    public static <T> void clearTable(UserTransaction userTransaction, EntityManager entityManager, Class<T> entityClass) {
+        try {
+            userTransaction.begin();
+
+            System.out.println("Delete starting");
+            Query query = entityManager.createQuery("DELETE FROM " + entityClass.getSimpleName());
+            query.executeUpdate();
+            System.out.println("Delete finished");
+
+            userTransaction.commit();
+        } catch(Exception e) {
+            System.err.println(e);
+        }
     }
     
-    public static <T> void addEntities(EntityManager entityManager, List<T> entities) {
-        entityManager.getTransaction().begin();
-        
-        for(T entity : entities) {
-            entityManager.persist(entity);
+    public static <T> void addEntities(UserTransaction userTransaction, EntityManager entityManager, List<T> entities) {
+        try {
+            userTransaction.begin();
+
+            System.out.println("Add starting");
+            for(T entity : entities) {
+                entityManager.persist(entity);
+            }
+            System.out.println("Add finished");
+
+            userTransaction.commit();
+        } catch(Exception e) {
+            System.err.println(e);
         }
-        
-        entityManager.getTransaction().commit();
     }
 }

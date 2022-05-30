@@ -17,6 +17,9 @@ import javax.jms.Queue;
 import javax.jms.TextMessage;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.servlet.annotation.WebListener;
 import rs.ac.bg.etf.commons.controllers.DataSenderController;
 import rs.ac.bg.etf.commons.operations.SyncOperation;
 import rs.ac.bg.etf.commons.utils.ServiceUtils;
@@ -28,7 +31,8 @@ import rs.ac.bg.etf.pasulj.entities.Location;
  *
  * @author matej
  */
-public class PasuljDataSenderService implements Runnable {
+@WebListener
+public class PasuljDataSenderService implements ServletContextListener {
     
     private static final Logger logger = Logger.getLogger(PasuljDataSenderService.class.getName());
     
@@ -45,7 +49,17 @@ public class PasuljDataSenderService implements Runnable {
     private Queue dataQueue;
 
     @Override
-    public void run() {
+    public void contextInitialized(ServletContextEvent sce) {
+        Thread serviceThread = new Thread(() -> startService());
+        serviceThread.start();
+    }
+    
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        entityManager.close();
+    }
+    
+    public void startService() {
         JMSContext context = connectionFactory.createContext();
         JMSProducer producer = context.createProducer();
         JMSConsumer consumer = context.createConsumer(requestQueue);
@@ -54,9 +68,11 @@ public class PasuljDataSenderService implements Runnable {
         
         while(true) {
             try {
+                logger.info("Pasulj DataSender accepting requests");
                 TextMessage request = (TextMessage)consumer.receive();
                 
                 String requestName = request.getText();
+                logger.info("Pasulj DataSender got request: " + requestName);
                 if(SyncOperation.BRANCH.getName().equals(requestName)) {
                     ServiceUtils.sendAllToQueue(dataSenderController, producer, dataQueue, Branch.class);
                 } else if (SyncOperation.CLIENT.getName().equals(requestName)) {
@@ -66,6 +82,7 @@ public class PasuljDataSenderService implements Runnable {
                 } else {
                     logger.log(Level.WARNING, "Unsupported operation {0}", requestName);
                 }
+                logger.info("Pasulj DataSender request finished");
             } catch (JMSException ex) {
                 logger.log(Level.SEVERE, null, ex);
             }

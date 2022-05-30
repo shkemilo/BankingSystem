@@ -41,7 +41,7 @@ public class Client {
                orphanRemoval = true,
                fetch = FetchType.LAZY,
                cascade = CascadeType.ALL)
-    private List<Account> accounts = new ArrayList<>();
+    private transient List<Account> accounts = new ArrayList<>();
 
     public Client(String name, String address, long locationId) {
         this.name = name;

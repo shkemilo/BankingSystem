@@ -18,7 +18,7 @@ public class Boranija {
     public static void main(String[] args) {
         System.out.println("Boranija starting!");
         
-        EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("boranijaPU");
+        EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("boranijaLocalPU");
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         
         entityManager.getTransaction().begin();

@@ -7,10 +7,13 @@ package rs.ac.bg.etf.kupus.services;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.util.Pair;
 import javax.annotation.Resource;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSConsumer;
@@ -21,10 +24,15 @@ import javax.jms.Queue;
 import javax.jms.TextMessage;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.servlet.annotation.WebListener;
+import javax.transaction.UserTransaction;
 import rs.ac.bg.etf.commons.controllers.DataSyncController;
 import rs.ac.bg.etf.commons.operations.SyncOperation;
 import rs.ac.bg.etf.kupus.entities.Account;
 import rs.ac.bg.etf.kupus.entities.Branch;
+import rs.ac.bg.etf.kupus.entities.Client;
 import rs.ac.bg.etf.kupus.entities.DepositTransaction;
 import rs.ac.bg.etf.kupus.entities.InternalTransaction;
 import rs.ac.bg.etf.kupus.entities.Location;
@@ -35,28 +43,44 @@ import rs.ac.bg.etf.kupus.entities.WithdrawalTransaction;
  *
  * @author matej
  */
-public class KupusDataSyncService implements Runnable {
+@WebListener
+public class KupusDataSyncService implements ServletContextListener {
     
     private static final Logger logger = Logger.getLogger(KupusDataSyncService.class.getName());
     
-    private static final Pair<SyncOperation, Class<?>>[] pasuljOperationsDefinition = {
-        new Pair<>(SyncOperation.BRANCH, Branch.class),
-        new Pair<>(SyncOperation.LOCATION, Location.class)
+    private static final OperationDefinition[] pasuljOperationsDefinition = {
+        new OperationDefinition(SyncOperation.BRANCH, Branch.class),
+        new OperationDefinition(SyncOperation.LOCATION, Location.class)
     };
     
-    private static final Pair<SyncOperation, Class<?>>[] boranijaOperationsDefinition = {
-        new Pair<>(SyncOperation.ACCOUNT, Account.class),
-        new Pair<>(SyncOperation.TRANSACTION, Transaction.class),
-        new Pair<>(SyncOperation.INTERNAL_TRANSACTION, InternalTransaction.class),
-        new Pair<>(SyncOperation.DEPOSIT_TRANSACTION, DepositTransaction.class),
-        new Pair<>(SyncOperation.WITHDRAWAL_TRANSACTION, WithdrawalTransaction.class)
+    private static final OperationDefinition[] boranijaOperationsDefinition = {
+        new OperationDefinition(SyncOperation.CLIENT, Client.class),
+        new OperationDefinition(SyncOperation.ACCOUNT, Account.class),
+        new OperationDefinition(SyncOperation.TRANSACTION, Transaction.class),
+        new OperationDefinition(SyncOperation.INTERNAL_TRANSACTION, InternalTransaction.class),
+        new OperationDefinition(SyncOperation.DEPOSIT_TRANSACTION, DepositTransaction.class),
+        new OperationDefinition(SyncOperation.WITHDRAWAL_TRANSACTION, WithdrawalTransaction.class)
     };
+    
+    static private class OperationDefinition {
+        
+        public OperationDefinition(SyncOperation operation, Class type) {
+            this.operation = operation;
+            this.type = type;
+        }
+        
+        public final SyncOperation operation;
+        public final Class type;
+    }
             
     @Resource(lookup = "ConnectionFactory")
     private ConnectionFactory connectionFactory;
     
-    @PersistenceContext(name = "kupusPU")
+    @PersistenceContext(unitName = "kupusPU")
     private EntityManager entityManager;
+    
+    @Resource
+    private UserTransaction userTransaction;
         
     @Resource(lookup = "PasuljSyncRequestQueue")
     private Queue pasuljSyncRequestQueue;
@@ -66,37 +90,55 @@ public class KupusDataSyncService implements Runnable {
     
     @Resource(lookup = "KupusDataSyncQueue")
     private Queue dataQueue;
+    
+    private DataSyncController dataSyncController;
+    
+    private Gson gson;
 
     @Override
-    public void run() {
+    public void contextInitialized(ServletContextEvent sce) {
+        ScheduledExecutorService periodicSyncExecutor = Executors.newScheduledThreadPool(1);
+        periodicSyncExecutor.scheduleAtFixedRate(() -> startService(), 0, 2, TimeUnit.MINUTES);
+    }
+
+    private void startService() {
         JMSContext context = connectionFactory.createContext();
         JMSProducer producer = context.createProducer();
         JMSConsumer consumer = context.createConsumer(dataQueue);
         
-        executeOperations(consumer, producer, pasuljSyncRequestQueue, pasuljOperationsDefinition);
+        dataSyncController = new DataSyncController(entityManager);
+        gson = new Gson();
+        
+        logger.info("Kupus sync starting");
+        
+        logger.info("Start sending data sync requests to boranija: ");
         executeOperations(consumer, producer, boranijaSyncRequestQueue, boranijaOperationsDefinition);
         
-        // Client not synced yet here
+        logger.info("Start sending data sync requests to pasulj: ");
+        executeOperations(consumer, producer, pasuljSyncRequestQueue, pasuljOperationsDefinition);
+        
+        logger.info("Kupus sync finished");
     }
     
-    private void executeOperations(JMSConsumer consumer, JMSProducer producer, Queue destination, Pair<SyncOperation, Class<?>>[] operationsDefinition) {
-        DataSyncController dataSyncController = new DataSyncController(entityManager);
-        Gson gson = new Gson();
-        
+    private <T> void executeOperations(JMSConsumer consumer, JMSProducer producer, Queue destination, OperationDefinition[] operationDefinitions) {      
         try {
-            for(Pair<SyncOperation, Class<?>> operationDefinition : operationsDefinition) {
-                producer.send(destination, operationDefinition.getKey().getName());
+            for(OperationDefinition operationDefinition : operationDefinitions) {
+                logger.info("Sending request: " + operationDefinition.operation.getName());
+                producer.send(destination, operationDefinition.operation.getName());
                 String json = ((TextMessage) consumer.receive()).getText();
+                logger.info("Data recieved:\n" + json);
                 
-                processData(dataSyncController, gson, json, operationDefinition.getValue());
+                processData(json, operationDefinition.type);
             }
         } catch (JMSException ex) {
             logger.log(Level.SEVERE, null ,ex);
         }
     }
     
-    private <T> void processData(DataSyncController dataSyncController, Gson gson, String json, Class<T> type) {
-        List<T> entityList = gson.fromJson(json, new TypeToken<List<T>>(){}.getType());
-        dataSyncController.sync(entityList, type);
+    private <T> void processData(String json, Class<T> type) {
+        Type typeToken = TypeToken.getParameterized(List.class, type).getType();
+        List<T> entityList = gson.fromJson(json, typeToken);
+        logger.info("Data processed successfully. Entities to update: " + entityList.size());
+        dataSyncController.sync(userTransaction, entityList, type);
     } 
 }

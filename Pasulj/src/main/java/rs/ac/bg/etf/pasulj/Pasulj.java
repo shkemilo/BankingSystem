@@ -17,7 +17,7 @@ import rs.ac.bg.etf.pasulj.entities.Location;
 public class Pasulj {
     
     public static void main(String[] args) {
-        EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("pasuljPU");
+        EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("pasuljLocalPU");
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         
         entityManager.getTransaction().begin();

@@ -33,14 +33,11 @@ public class DataSenderController {
     
     public <T> List<T> getAll(Class<T> entityClass) {       
         if(!EntityUtility.isEntity(entityManager, entityClass)) {
-            entityManager.close();
             return null;
         }
         
-        TypedQuery<T> query = entityManager.createQuery("SELECT e FROM " + entityClass.getSimpleName(), entityClass);
+        TypedQuery<T> query = entityManager.createQuery("SELECT e FROM " + entityClass.getSimpleName() + " e", entityClass);
         List<T> entities = query.getResultList();
-        
-        entityManager.close();
         
         return entities;
     }
